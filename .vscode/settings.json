@@ -6,7 +6,6 @@
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}"
     },
-    "jupyter.notebookFileRoot": "${workspaceFolder}",
 
     // Activate venv when start terminal
     "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
@@ -16,5 +15,9 @@
         "path": "cmd.exe",
         "args": ["/k", ".venv\\Scripts\\activate"]
         }
-    }
+    },
+
+    // jupyter notebook
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "notebook.output.textLineLimit": 10,  // 设置最大显示行数
 }
