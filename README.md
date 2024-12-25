@@ -1,4 +1,18 @@
-pip install --upgrade notebook
+# README.md
+
+🔃 Convert jupyter notebook to a report format
+
+------------
+Find all notebooks and exchange the format to html
+
+    find * -type f -name "*.ipynb"
+    find * -type f -name "*.ipynb" -exec jupyter nbconvert --to html --output-dir docs/reports {} \;
+
+Report format could be pdf/html/markdown and save under `docs/reports`
+
+    jupyter nbconvert --to html --output-dir ../docs/reports "target_notebook_name.ipynb"
+
+**pip install --upgrade notebook**
 
 ---
 
