@@ -1,0 +1,50 @@
+digraph G {
+concentrate=true;
+splines="ortho";
+rankdir="LR";
+subgraph legend{
+    rank = min;
+    label = "legend";
+    Legend [shape=none, margin=0, label = <
+        <table cellspacing="0" cellpadding="0" border="1"><tr><td>Code2flow Legend</td></tr><tr><td>
+        <table cellspacing="0">
+        <tr><td>Regular function</td><td width="50px" bgcolor='#cccccc'></td></tr>
+        <tr><td>Trunk function (nothing calls this)</td><td bgcolor='#966F33'></td></tr>
+        <tr><td>Leaf function (this calls nothing else)</td><td bgcolor='#6db33f'></td></tr>
+        <tr><td>Function call</td><td><font color='black'>&#8594;</font></td></tr>
+        </table></td></tr></table>
+        >];
+}node_ca5a6f33 [label="188: convert()" name="utils::FileNotebookConverter.convert" shape="rect" style="rounded,filled" fillcolor="#966F33" ];
+node_e5a9ce98 [label="196: convert()" name="utils::FolderNotebookConverter.convert" shape="rect" style="rounded,filled" fillcolor="#966F33" ];
+node_fc4da502 [label="64: convert_all_markdown_to_html()" name="utils::convert_all_markdown_to_html" shape="rect" style="rounded,filled" fillcolor="#966F33" ];
+node_ade91900 [label="114: find_all_ipynb_files()" name="utils::find_all_ipynb_files" shape="rect" style="rounded,filled" fillcolor="#6db33f" ];
+node_6eb4fc5f [label="45: find_all_markdown_files()" name="utils::find_all_markdown_files" shape="rect" style="rounded,filled" fillcolor="#6db33f" ];
+node_d1f6cf28 [label="15: markdown_to_html()" name="utils::markdown_to_html" shape="rect" style="rounded,filled" fillcolor="#6db33f" ];
+node_17d70376 [label="133: notebook_to_html()" name="utils::notebook_to_html" shape="rect" style="rounded,filled" fillcolor="#6db33f" ];
+node_ca5a6f33 -> node_17d70376 [color="#009E73" penwidth="2"];
+node_e5a9ce98 -> node_ade91900 [color="#000000" penwidth="2"];
+node_e5a9ce98 -> node_17d70376 [color="#000000" penwidth="2"];
+node_fc4da502 -> node_6eb4fc5f [color="#56B4E9" penwidth="2"];
+node_fc4da502 -> node_d1f6cf28 [color="#56B4E9" penwidth="2"];
+subgraph cluster_ede41125 {
+    node_d1f6cf28 node_6eb4fc5f node_fc4da502 node_ade91900 node_17d70376;
+    label="File: utils";
+    name="utils";
+    style="filled";
+    graph[style=dotted];
+    subgraph cluster_4101b9a2 {
+        node_ca5a6f33;
+        label="Class: FileNotebookConverter";
+        name="FileNotebookConverter";
+        style="filled";
+        graph[style=dotted];
+    };
+    subgraph cluster_7dd87528 {
+        node_e5a9ce98;
+        label="Class: FolderNotebookConverter";
+        name="FolderNotebookConverter";
+        style="filled";
+        graph[style=dotted];
+    };
+};
+}

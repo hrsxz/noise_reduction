@@ -1,51 +1,250 @@
+"""
+This module contains utility functions for the project like converting markdown to html and pdf
+and other miscellaneous functions.
+"""
+
 import os
-from nbconvert import HTMLExporter, PDFExporter
-from traitlets.config import Config
+from pathlib import Path
+import markdown  # type: ignore
+import nbformat
+# from weasyprint import HTML
+from nbconvert import HTMLExporter
+from datetime import datetime
+
+
+def markdown_to_html(markdown_file_path: str,
+                     target_file_folder: str,
+                     additional_pdf_file: bool = False):
+    """This function converts a markdown file to a pdf file
+
+    Args:
+        markdown_file_path (str): full path to the markdown file
+        target_file_folder (str): folder name where the pdf file will be saved
+    """
+    with open(markdown_file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+    # Convert the markdown text to html
+    html_text = markdown.markdown(text)
+    # Use the os.path.basename function to get the filename from the full path
+    filename = os.path.basename(markdown_file_path)
+    # Replace the .md extension with .html
+    pdf_filename = filename.replace('.md', '.html')
+    target_file_path = os.path.join(target_file_folder, pdf_filename)
+    # 'wb' mode is used to write binary data to the file
+    # 'w' mode is used to write text data to the file
+    # Save the html text to a file
+    with open(target_file_path, 'w', encoding='utf-8') as f:
+        f.write(html_text)
+    # Write additional pdf file
+    if additional_pdf_file:
+        # Convert the html text to pdf
+        # HTML(string=html_text).write_pdf(target_file_path)
+        pass
+
+
+def find_all_markdown_files(
+    folder_path: str
+) -> list[str]:
+    """Find all .md files within a specified folder path.
+
+    Args:
+        folder_path (str): The path to the folder where .md files are stored.
+
+    Returns:
+        list: A list of paths to the .md files.
+    """
+    md_files = []
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.md'):
+                md_files.append(os.path.join(root, file))
+    return md_files
+
+
+def convert_all_markdown_to_html(
+    markdown_folder_path: str,
+    target_file_folder: str,
+    additional_pdf_file: bool = False
+):
+    """This function converts all markdown files under a folder to a html pages.
+
+    Args:
+        folder_path (str): folder path where the markdown files are stored
+        target_file_folder (str): folder name where the pdf file will be saved
+    """
+    all_markdown_files = find_all_markdown_files(markdown_folder_path)
+    for md_file in all_markdown_files:
+        markdown_to_html(md_file, target_file_folder, additional_pdf_file)
+
+
+def get_markdown_converter(source_path, target_folder, additional_pdf=False):
+    """This function use the factory pattern to create the appropriate Notebook converter
+
+    Args:
+        source_path (_type_): _description_
+        target_folder (_type_): _description_
+        additional_pdf (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if os.path.isdir(source_path):
+        return FolderNotebookConverter(source_path, target_folder, additional_pdf)
+    elif os.path.isfile(source_path):
+        return FileNotebookConverter(source_path, target_folder, additional_pdf)
+    else:
+        raise ValueError("Source path must be a file or a directory")
+
+
+# The following code provides a flexible and object-oriented approach to converting
+# Jupyter notebook files to HTML.
+# It employs polymorphism and encapsulation principles to handle both individual files
+# and directories containing multiple files.
+# The module defines a base class, `NotebookConverter`, with specialized subclasses
+# `FileNotebookConverter` and `FolderNotebookConverter`
+# that override the base method for specific use cases. A factory function,
+# `get_notebook_converter`, is used to instantiate the appropriate converter
+# based on the input's nature, enhancing code modularity and ease of maintenance.
+# This structure allows for easy extension, such as adding new types of inputs.
+
+
+def find_all_ipynb_files(
+    folder_path: str
+) -> list[str]:
+    """Find all .ipynb files within a specified folder path.
+
+    Args:
+        folder_path (str): The path to the folder where .ipynb files are stored.
+
+    Returns:
+        list: A list of paths to the .ipynb files.
+    """
+    ipynb_files = []
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.ipynb'):
+                ipynb_files.append(os.path.join(root, file))
+    return ipynb_files
+
+
+def notebook_to_html(notebook_file, target_folder):
+    """This function converts a jupyter notebook file to html and pdf files.
+
+    Args:
+        notebook_file (str): The path to the jupyter notebook file.
+        target_folder (str): The folder where the html and pdf files will be saved.
+        Defaults to False.
+    """
+    # Read the notebook file
+    notebook_path = Path(notebook_file)
+    notebook = nbformat.read(notebook_path, as_version=4)
+
+    # Create an HTML exporter
+    html_exporter = HTMLExporter()
+    html_exporter.template_name = 'lab'
+    # Ensure JavaScript is executed
+    html_exporter.exclude_input = False
+    html_exporter.exclude_output_prompt = True
+
+    # Ensure Plotly figures and images are embedded
+    html_exporter.template_data = {
+        "embed_images": True,
+        "plotly_renderer": "notebook_connected"
+    }
+
+    # export the notebook to HTML
+    (body, _) = html_exporter.from_notebook_node(notebook)
+    output_file_path = target_folder  + f"/{notebook_path.stem}.html"
+
+    # Write the HTML output to a file
+    output_path = Path(output_file_path)
+    output_path.write_text(body, encoding='utf-8')
+    print(f"HTML with embedded Plotly figures saved to {output_path}")
 
 
 class NotebookConverter:
-    def __init__(self, source_notebook, target_folder, additional_pdf=False):
-        self.source_notebook = source_notebook
+    """This class is a base class for converting jupyter notebook files to html and/or pdf files.
+    """
+    def __init__(self, source_path, target_folder, additional_pdf=False):
+        self.source_path = source_path
         self.target_folder = target_folder
         self.additional_pdf = additional_pdf
 
-        # 确保目标文件夹存在
-        os.makedirs(target_folder, exist_ok=True)
-
     def convert(self):
-        # 获取文件名（无扩展名）
-        notebook_name = os.path.splitext(os.path.basename(self.source_notebook))[0]
-
-        # 转换为 HTML
-        html_output_path = os.path.join(self.target_folder, f"{notebook_name}.html")
-        self.convert_to_html(html_output_path)
-
-        # 如果需要，转换为 PDF
-        if self.additional_pdf:
-            pdf_output_path = os.path.join(self.target_folder, f"{notebook_name}.pdf")
-            self.convert_to_pdf(pdf_output_path)
-
-    def convert_to_html(self, output_path):
-        print(f"Converting {self.source_notebook} to HTML...")
-        exporter = HTMLExporter()
-        config = Config()
-        config.HTMLExporter.preprocessors = ["nbconvert.preprocessors.ExecutePreprocessor"]
-        exporter.config = config
-        body, _ = exporter.from_filename(self.source_notebook)
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(body)
-        print(f"HTML file saved to {output_path}")
-
-    def convert_to_pdf(self, output_path):
-        print(f"Converting {self.source_notebook} to PDF...")
-        exporter = PDFExporter()
-        config = Config()
-        exporter.config = config
-        body, _ = exporter.from_filename(self.source_notebook)
-        with open(output_path, "wb") as f:
-            f.write(body)
-        print(f"PDF file saved to {output_path}")
+        """This method converts the jupyter notebook file to html and pdf file.
+        """
+        raise NotImplementedError("This method should be overridden by subclasses.")
 
 
-def get_notebook_converter(source_notebook, target_folder, additional_pdf=False):
-    return NotebookConverter(source_notebook, target_folder, additional_pdf)
+class FileNotebookConverter(NotebookConverter):
+    """This class converts a single Notebook file to html and pdf files.
+
+    Args:
+        NotebookConverter (_type_): _description_
+    """
+    def convert(self):
+        print(f"Converting Notebook file: {self.source_path}")
+        notebook_to_html(self.source_path, self.target_folder)
+
+
+class FolderNotebookConverter(NotebookConverter):
+    """This class converts all Notebook files in a folder to html and pdf files.
+    """
+    def convert(self):
+        """This method converts all Notebook files in the folder to html and pdf files.
+        """
+        all_notebook_files = find_all_ipynb_files(self.source_path)
+        for notebook_file in all_notebook_files:
+            print(f"Converting Notebook file: {notebook_file}")
+            notebook_to_html(notebook_file, self.target_folder)
+        print("last save time:", datetime.now())
+
+
+def get_notebook_converter(
+    source_path,
+    target_folder= "./docs/html",
+    additional_pdf=False
+):
+    """This function use the factory pattern to create the appropriate Notebook converter
+
+    Args:
+        source_path (str): _description_
+        target_folder (str): _description_
+        additional_pdf (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    print("last save time:", datetime.now())
+    if os.path.isdir(source_path):
+        return FolderNotebookConverter(source_path, target_folder, additional_pdf)
+    elif os.path.isfile(source_path):
+        return FileNotebookConverter(source_path, target_folder, additional_pdf)
+    else:
+        raise ValueError("Source path must be a file or a directory")
+
+
+# This part used for code2flow in order to generate the call graph of the source code.
+# ------------------------------------------------------------------------------------
+# PS D:\Digitalization\AnomalyDetectionTimeSeries\MultivariateTimeSeries> code2flow
+# src/utils/utils.py --output docs/code2flow/pics_code2flow.png
+# ------------------------------------------------------------------------------------
+#  import constants
+#  if __name__ == "__main__":
+#      # path_to_markdown = (constants.project_root_path /
+#      #                     "notebook/time-series-gan-with-pytorch.ipynb")
+#      print(constants.project_root_path)
+#      path_to_markdown = constants.project_root_path / "notebook"
+#      target_folder = constants.project_root_path / "docs/html"
+#      converter = get_notebook_converter(
+#          path_to_markdown,
+#          target_folder,
+#          additional_pdf=True
+#      )
+#      converter.convert()

@@ -11,6 +11,7 @@ bleach==6.2.0
 certifi==2024.12.14
 cffi==1.17.1
 charset-normalizer==3.4.0
+code2flow==2.5.1
 colorama==0.4.6
 coloredlogs==15.0.1
 comm==0.2.2
@@ -29,6 +30,7 @@ httpx==0.28.1
 humanfriendly==10.0
 idna==3.10
 ipykernel==6.29.5
+ipynbname==2024.1.0.0
 ipython==8.31.0
 isoduration==20.11.0
 jedi==0.19.2
@@ -46,6 +48,7 @@ jupyter_server_terminals==0.5.3
 jupyterlab==4.3.4
 jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
+Markdown==3.7
 MarkupSafe==3.0.2
 matplotlib-inline==0.1.7
 mistune==3.0.2
