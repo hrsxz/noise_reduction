@@ -78,7 +78,7 @@ def show_traces(
     fig = go.Figure()
     for index, row in df.iterrows():
         fig.add_trace(go.Scatter(
-            x=df.columns,  # 假设列名代表时间点
+            x=df.columns,  # columns names as x values
             y=row.values,  # 当前行的值
             mode='lines',  # 绘制线条模式
             name=str(index)  # 使用行索引作为图例名称
@@ -139,4 +139,26 @@ def compare_org_reconstructed(input_data, reconstructed_data):
     )
 
     # 显示图表
+    fig.show()
+
+
+def plot_overlay_density(data_list, labels, feature_idx, title):
+    """
+    Use Plotly to plot the overlay density of the data.
+    """
+    fig = go.Figure()
+    for data, label in zip(data_list, labels):
+        fig.add_trace(go.Histogram(
+            x=data[:, feature_idx],
+            histnorm='density',
+            name=label,
+            opacity=0.7
+        ))
+    fig.update_layout(
+        title=title,
+        xaxis_title="Value",
+        yaxis_title="Density",
+        barmode='overlay',
+        template="plotly_white"
+    )
     fig.show()
