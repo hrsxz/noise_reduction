@@ -3,6 +3,7 @@
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 import plotly.graph_objs as go  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
 
@@ -161,4 +162,67 @@ def plot_overlay_density(data_list, labels, feature_idx, title):
         barmode='overlay',
         template="plotly_white"
     )
+    fig.show()
+
+
+# 获取模型重建误差
+def plot_reconstruction_error(model, test_data, test_labels, threshold, title):
+    # 使用测试数据进行前向传播，获取重建结果
+    reconstructed_data, _ = model(test_data)
+
+    # 计算每个样本的重建误差
+    reconstruction_error = tf.reduce_mean(
+        tf.square(test_data - reconstructed_data),
+        axis=1
+    ).numpy()
+
+    # 获取正常样本和异常样本的索引
+    normal_indices = (test_labels == 1)
+    anomaly_indices = (test_labels == 0)
+
+    # 绘制重建误差图
+    fig = go.Figure()
+
+    # 绘制正常样本的重建误差
+    fig.add_trace(
+        go.Scatter(
+            x=np.arange(len(reconstruction_error))[normal_indices],
+            y=reconstruction_error[normal_indices],
+            mode='markers',
+            name='Normal Samples',
+            marker=dict(color='blue')
+        )
+    )
+
+    # 绘制异常样本的重建误差
+    fig.add_trace(
+        go.Scatter(
+            x=np.arange(len(reconstruction_error))[anomaly_indices],
+            y=reconstruction_error[anomaly_indices],
+            mode='markers',
+            name='Anomaly Samples',
+            marker=dict(color='red')
+        )
+    )
+
+    # 添加阈值线
+    fig.add_trace(
+        go.Scatter(
+            x=np.arange(len(reconstruction_error)),
+            y=[threshold] * len(reconstruction_error),
+            mode='lines',
+            name='Threshold',
+            line=dict(color='green', dash='dash')
+        )
+    )
+
+    # 更新图表布局
+    fig.update_layout(
+        title= title,
+        xaxis_title='Sample Index',
+        yaxis_title='Reconstruction Error',
+        template='plotly_white'
+    )
+
+    # 显示图表
     fig.show()
